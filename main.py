@@ -74,9 +74,9 @@ if __name__ == '__main__':
                 param.requires_grad = False
 
         model.lin.reset_parameters()
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0001)
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
 
-        train(model, train_loader_bace, optimizer, criterion, device, num_epochs=20)
+        train(model, train_loader_bace, optimizer, criterion, device, num_epochs=15)
 
         metrics = evaluate(model, test_loader_bace, device)
         all_metrics.append(metrics)
