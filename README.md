@@ -50,7 +50,7 @@ CUDA_VISIBLE_DEVICES=[device_id] python3 main.py
 > Statistically significant results (p < 0.05) are highlighted in **bold**.
 
 
-## Contact
+## 👤 Contact
 
 If you have any questions or would like to get in touch, feel free to reach out:
 
