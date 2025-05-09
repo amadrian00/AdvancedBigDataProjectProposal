@@ -18,7 +18,7 @@ This repository contains the implementation of a deep learning pipeline for mole
 
 ## 📦 Required Libraries
 
-Ensure the following Python packages are installed (click on them to go to their page):
+Ensure the following Python packages are installed:
 
 - [`torch`](https://pytorch.org/get-started/locally/)
 - [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html)
