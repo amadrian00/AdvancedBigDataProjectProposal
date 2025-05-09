@@ -14,6 +14,6 @@ class GCN(torch.nn.Module):
     def forward(self, x, edge_index, edge_attr, batch):
         edge_attr = self.embedding(edge_attr).relu()
         x = self.conv1(x, edge_index, edge_attr).relu()
-        x = self.conv2(x, edge_index, edge_attr).relu()
+        x = self.conv2(x, edge_index, edge_attr)
         x = global_add_pool(x, batch)
         return self.lin(x).squeeze(1)

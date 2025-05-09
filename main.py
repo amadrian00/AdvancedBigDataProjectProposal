@@ -58,7 +58,7 @@ def train_test_kfold(dataset, y, train_id, test_loader_ext, train_loader_ft=None
             model.lin.reset_parameters()
             optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0005)
 
-            train(model, train_loader_ft, optimizer, criterion, device, num_epochs=20)
+            train(model, train_loader_ft, optimizer, criterion, device, num_epochs=50)
 
         metrics = evaluate(model, test_loader_ext, device)
         all_metrics.append(metrics)
