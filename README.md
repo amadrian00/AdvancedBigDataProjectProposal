@@ -28,8 +28,9 @@ Ensure the following Python packages are installed (click on them to go to their
 - [`scipy`](https://scipy.org/install/)
 - [`scikit-learn`](https://scikit-learn.org/stable/install.html)
 
-You can execute the baseline code as (Replace [device_id] with your GPU ID (e.g., 0). Use nvidia-smi to check available devices):
-```
+You can execute the baseline code as follows (replace `[device_id]` with your GPU ID, e.g., `0`). Use `nvidia-smi` to check available devices:
+
+```bash
 CUDA_VISIBLE_DEVICES=[device_id] python3 main.py
 ```
 
