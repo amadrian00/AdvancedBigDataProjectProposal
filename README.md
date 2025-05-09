@@ -28,13 +28,15 @@ Ensure the following Python packages are installed:
 - [`scipy`](https://scipy.org/install/)
 - [`scikit-learn`](https://scikit-learn.org/stable/install.html)
 
+
+## 🚀 Execution
 You can execute the baseline code as follows (replace `[device_id]` with your GPU ID, e.g., `0`). Use `nvidia-smi` to check available devices:
 
 ```bash
 CUDA_VISIBLE_DEVICES=[device_id] python3 main.py
 ```
 
-## Baselines — 5-Fold Average + Paired t-test
+## 📊 Baselines — 5-Fold Average + Paired t-test
 
 | Metric      | Mean BACE | Std BACE | Mean BBBP | Std BBBP | % Inc. | p-value |
 |-------------|-----------|----------|-----------|----------|--------|---------|
