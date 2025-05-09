@@ -1,8 +1,8 @@
 import os
 import torch
 from model import GCN
-from scipy.stats import tstd
 from train_eval import train, evaluate
+from scipy.stats import tstd, ttest_rel
 from torch_geometric.loader import DataLoader
 from torch.serialization import add_safe_globals
 from sklearn.model_selection import StratifiedKFold
@@ -36,59 +36,77 @@ def prepare_dataset(dataset_name, label_col=0, check_nan=False):
 def create_data_loader(dataset, indices, batch_size=64, shuffle=False):
     return DataLoader(dataset[indices], batch_size=batch_size, shuffle=shuffle)
 
+def train_test_kfold(dataset, y, train_id, test_loader, train_loader_ft=None):
+    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+    all_metrics = []
+    for fold, (train_idx, _) in enumerate(skf.split(torch.zeros_like(y), y)):
+        print(f'\n--- Fold {fold + 1} ---')
+
+        train_loader = DataLoader(dataset[train_id[train_idx]], batch_size=64, shuffle=True)
+
+        model = GCN(9, 1).to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
+        criterion = torch.nn.BCEWithLogitsLoss()
+
+        train(model, train_loader, optimizer, criterion, device, num_epochs=50)
+
+        if train_loader_ft:
+            for name, param in model.named_parameters():
+                if not name.startswith('lin'):
+                    param.requires_grad = False
+
+            model.lin.reset_parameters()
+            optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0005)
+
+            train(model, train_loader_ft, optimizer, criterion, device, num_epochs=50)
+
+        metrics = evaluate(model, test_loader, device)
+        all_metrics.append(metrics)
+        print(metrics)
+    return all_metrics
+
+
 if __name__ == '__main__':
     add_safe_globals([DataEdgeAttr, DataTensorAttr, GlobalStorage])
     set_seed(42)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Prepare BACE dataset
+    ####################################################################################################
+    ###     This test loader MUST not be changed and SHOULD be used for reporting final results.     ###
+    ####################################################################################################
     dataset_bace, split_bace, idx_bace, y_bace = prepare_dataset("ogbg-molbace")
+    test_loader_bace = create_data_loader(dataset_bace, split_bace["test"])
+    ####################################################################################################
+    ####################################################################################################
 
     train_loader_bace = create_data_loader(dataset_bace, idx_bace, shuffle=True)
-    test_loader_bace = create_data_loader(dataset_bace, split_bace["test"])
 
-    # Prepare training dataset
+    all_metrics_bace = train_test_kfold(dataset_bace, y_bace, idx_bace, test_loader_bace)
+
     dataset_bbbp, split_bbbp, idx_bbbp, y_bbbp = prepare_dataset("ogbg-molbbbp", check_nan=True)
 
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    all_metrics = []
-    for fold, (train_idx, val_idx) in enumerate(skf.split(torch.zeros_like(y_bbbp), y_bbbp)):
-        print(f'\n--- Fold {fold + 1} ---')
+    all_metrics_bbbp = train_test_kfold(dataset_bbbp, y_bbbp, idx_bbbp, train_loader_bace, test_loader_bace)
 
-        train_subset = dataset_bbbp[idx_bbbp[train_idx]]
-        val_subset = dataset_bbbp[idx_bbbp[val_idx]]
+    print("\n--- 5 Folds Average + Paired t-test ---")
+    print(
+        f"{'Metric':<15}{'Mean BACE':>12}{'Std BACE':>12}{'Mean BBBP':>15}{'Std BBBP':>12}{'% Inc.':>15}{'p-value':>12}")
+    print("-" * 99)
 
-        train_loader = DataLoader(train_subset, batch_size=64, shuffle=True)
-        val_loader = DataLoader(val_subset, batch_size=64)
+    for key in all_metrics_bace[0].keys():
+        values_bace = [m[key] for m in all_metrics_bace]
+        values_bbbp = [m[key] for m in all_metrics_bbbp]
 
-        #model = GCN(9, dataset.y.shape[1]).to(device)
-        model = GCN(9, 1).to(device)
+        mean_bace = sum(values_bace) / len(values_bace)
+        std_bace = tstd(values_bace)
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-        criterion = torch.nn.BCEWithLogitsLoss()
+        mean_bbbp = sum(values_bbbp) / len(values_bbbp)
+        std_bbbp = tstd(values_bbbp)
 
-        train(model, train_loader, optimizer, criterion, device, num_epochs=100)
+        t_stat, p_val = ttest_rel(values_bbbp, values_bace)
 
-        for name, param in model.named_parameters():
-            if not name.startswith('lin'):
-                param.requires_grad = False
+        try:
+            pct_inc = ((mean_bbbp - mean_bace) / abs(mean_bace)) * 100
+        except ZeroDivisionError:
+            pct_inc = float('nan')
 
-        model.lin.reset_parameters()
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
-
-        train(model, train_loader_bace, optimizer, criterion, device, num_epochs=15)
-
-        metrics = evaluate(model, test_loader_bace, device)
-        all_metrics.append(metrics)
-        print(metrics)
-
-    keys = all_metrics[0].keys()
-
-    print("\n--- 5 Folds Average ---")
-    print(f"{'Metric':<15}{'Mean':>10}{'Std':>10}")
-    print("-" * 35)
-    for key in keys:
-        values = [m[key] for m in all_metrics]
-        mean_val = sum(values) / len(values)
-        std_val = tstd(values)
-        print(f"{key:<15}{mean_val:>10.4f}{std_val:>10.4f}")
+        print(f"{key:<15}{mean_bace:>12.4f}{std_bace:>12.4f}{mean_bbbp:>15.4f}{std_bbbp:>12.4f}{pct_inc:>15.2f}{p_val:>12.4f}")
