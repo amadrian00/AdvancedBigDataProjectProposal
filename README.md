@@ -37,14 +37,15 @@ CUDA_VISIBLE_DEVICES=[device_id] python3 main.py
 ```
 
 ## 📊 Baselines — 5-Fold Average + Paired t-test
+### 5-Fold Cross-Validation Results + Paired t-test
 
-| Metric      | Mean BACE | Std BACE | Mean BBBP | Std BBBP | % Inc. | p-value |
-|-------------|-----------|----------|-----------|----------|--------|---------|
-| Accuracy    | 0.5482    | 0.0740   | 0.5118    | 0.0773   | -6.63  | 0.0603  |
-| Sensitivity | 0.3481    | 0.3646   | 0.3689    | 0.1907   |  5.96  | 0.7971  |
-| Specificity | 0.7763    | 0.2865   | 0.6749    | 0.2055   | -13.06 | 0.1767  |
-| F1 Score    | 0.3480    | 0.2946   | 0.4221    | 0.1493   | 21.27  | 0.2372  |
-| ROC AUC     | 0.5923    | 0.1213   | 0.5140    | 0.0942   | -13.22 | **0.0078**  |
+| Metric      | Mean BACE | Std BACE | Mean BBBP | Std BBBP | % Inc. | p-value  |
+|-------------|-----------|----------|-----------|----------|--------|----------|
+| Accuracy    | 0.5508    | 0.0733   | 0.5637    | 0.0607   |  2.34  | 0.5217   |
+| Sensitivity | 0.2919    | 0.2877   | 0.2756    | 0.1862   | -5.58  | 0.8245   |
+| Specificity | 0.8462    | 0.1937   | 0.8924    | 0.0893   |  5.46  | 0.3154   |
+| F1 Score    | 0.3370    | 0.2571   | 0.3724    | 0.1712   | 10.49  | 0.5887   |
+| ROC AUC     | 0.6115    | 0.0908   | 0.6637    | 0.0462   |  8.54  | **0.0284** |
 
 > **Note:** *% Inc.* refers to the relative change from BACE to BBBP.  
 > Statistically significant results (p < 0.05) are highlighted in **bold**.

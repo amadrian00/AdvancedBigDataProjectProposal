@@ -45,10 +45,10 @@ def train_test_kfold(dataset, y, train_id, test_loader_ext, train_loader_ft=None
         train_loader = create_data_loader(dataset, train_id[train_idx], shuffle=True)
 
         model = GCN(9, 1).to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
 
-        train(model, train_loader, optimizer, criterion, device, num_epochs=50)
+        train(model, train_loader, optimizer, criterion, device, num_epochs=100)
 
         if train_loader_ft:
             for name, param in model.named_parameters():
@@ -56,9 +56,9 @@ def train_test_kfold(dataset, y, train_id, test_loader_ext, train_loader_ft=None
                     param.requires_grad = False
 
             model.lin.reset_parameters()
-            optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.0005)
+            optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
 
-            train(model, train_loader_ft, optimizer, criterion, device, num_epochs=50)
+            train(model, train_loader_ft, optimizer, criterion, device, num_epochs=100)
 
         metrics = evaluate(model, test_loader_ext, device)
         all_metrics.append(metrics)
